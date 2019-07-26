@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v1
+package k8sv1
 
 import (
 	"gwproxy/externols/k8s.io/kubernetes/pkg/api/resource"
@@ -63,6 +63,8 @@ import (
 //      It must contains at least one letter [a-z] and it must contains only [a-z0-9-].
 //      Hypens ('-') cannot be leading or trailing character of the string
 //      and cannot be adjacent to other hyphens.
+
+
 
 // Note:
 // There are two different styles of label selectors used in versioned types:

@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"gwproxy/externols/github.com/openshift/origin/deploy/api/v1"
+	"gwproxy/externols/k8s.io/kubernetes/pkg/api/v1"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -18,8 +19,11 @@ import (
 type handle struct {
 	host string
 }
+
 type kinds struct {
 	Kind string `json:"kind"`
+}
+type Everything interface {
 }
 
 func regurl(r *http.Request) string {
@@ -45,7 +49,7 @@ func regurl(r *http.Request) string {
 func (this *handle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	cluster := regurl(r)
-	//fmt.Printf("cluster\n%+v\n",cluster)
+	//fmt.Printf("kind\n%+v\n",kind)
 	//fmt.Printf("Header\n %+v\n", r.Header["Origin"][0])
 	remote, err := url.Parse("https://" + cluster)
 
@@ -61,7 +65,47 @@ func (this *handle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	proxy.ServeHTTP(w, r)
+
 }
+func formatkind(kind string, body []byte) ([]byte) {
+
+	var structtype interface{}
+
+	switch kind {
+
+	case "DeploymentConfig":
+		structtype = deploy.DeploymentConfig{}
+	case "ReplicationControllerList":
+		structtype = k8sv1.ReplicationControllerList{}
+	case "SecretList":
+		structtype = k8sv1.SecretList{}
+	case "EventList":
+		structtype = k8sv1.EventList{}
+	case "ConfigMapList":
+		structtype = k8sv1.ConfigMapList{}
+	case "PersistentVolumeClaimList":
+		structtype = k8sv1.PersistentVolumeClaimList{}
+
+	default:
+		fmt.Printf("%+v\n", kind)
+		structtype = "11"
+
+	}
+	if structtype == "11" {
+
+		return body
+	}
+	err := json.Unmarshal(body, &structtype)
+
+	if err != nil {
+		panic(err)
+	}
+
+	body, err = json.Marshal(structtype)
+
+	return body
+}
+
 func rewriteBody(resp *http.Response) (err error) {
 	b, err := ioutil.ReadAll(resp.Body) //Read html
 
@@ -81,15 +125,7 @@ func rewriteBody(resp *http.Response) (err error) {
 		return err
 	}
 
-	if kinds.Kind == "DeploymentConfig" {
-		DeploymentConfig := deploy.DeploymentConfig{}
-
-		err = json.Unmarshal(b, &DeploymentConfig)
-		//if err!=nil{
-		//	return err
-		//}
-		fmt.Printf("Namespace \n%+v\n", DeploymentConfig.ObjectMeta.Namespace)
-	}
+	b = formatkind(kinds.Kind, b)
 
 	b = bytes.Replace(b, []byte("server"), []byte("schmerver"), -1) // replace html
 

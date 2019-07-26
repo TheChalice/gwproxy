@@ -1,4 +1,4 @@
-package v1
+package image
 
 import (
 	"gwproxy/externols/k8s.io/kubernetes/pkg/api/unversioned"

@@ -14,12 +14,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v1beta1
+package k8sapis
 
 import (
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/intstr"
-	"gwproxy/externols/k8s.io/kubernetes/pkg/api/v1"
+	metav1 "gwproxy/externols/k8s.io/apimachinery/pkg/apis/meta/v1"
+	"gwproxy/externols/k8s.io/apimachinery/pkg/util/intstr"
+	v1 "gwproxy/externols/k8s.io/kubernetes/pkg/api/v1"
 )
 
 const (

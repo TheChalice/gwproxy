@@ -18,7 +18,7 @@ package v1beta1
 
 import (
 	"gwproxy/externols/k8s.io/kubernetes/pkg/api/unversioned"
-	"gwproxy/externols/k8s.io/kubernetes/pkg/api/v1"
+	v1 "gwproxy/externols/k8s.io/kubernetes/pkg/api/v1"
 	"gwproxy/externols/k8s.io/kubernetes/pkg/util"
 )
 

@@ -5,8 +5,14 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"gwproxy/externols/github.com/openshift/origin/build/api/v1"
 	"gwproxy/externols/github.com/openshift/origin/deploy/api/v1"
+	"gwproxy/externols/github.com/openshift/origin/image/api/v1"
+	"gwproxy/externols/github.com/openshift/origin/project/api/v1"
+	"gwproxy/externols/github.com/openshift/origin/route/api/v1"
+	"gwproxy/externols/github.com/openshift/origin/user/api/v1"
 	"gwproxy/externols/k8s.io/kubernetes/pkg/api/v1"
+	"gwproxy/externols/k8s.io/kubernetes/pkg/apis/apps/v1beta1"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -67,33 +73,102 @@ func (this *handle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	proxy.ServeHTTP(w, r)
 
 }
-func formatkind(kind string, body []byte) ([]byte) {
+func formatkind(kind string, body []byte) []byte {
 
 	var structtype interface{}
 
 	switch kind {
 
+	case "ProjectList":
+		structtype = ocproject.ProjectList{}
+
+	case "User":
+		structtype = ocuser.User{}
+
+	case "BuildList":
+		structtype = build.BuildList{}
+
+	case "BuildConfigList":
+		structtype = build.BuildConfigList{}
+
+	case "BuildConfig":
+		structtype = build.BuildConfig{}
+
+	case "ImageStreamList":
+		structtype = image.ImageStreamList{}
+
+	case "ImageStreamTag":
+		structtype = image.ImageStreamTag{}
+
+	case "ImageStream":
+		structtype = image.ImageStream{}
+
+	case "ImageStreamImage":
+		structtype = image.ImageStreamImage{}
+
 	case "DeploymentConfig":
 		structtype = deploy.DeploymentConfig{}
+
+	case "DeploymentConfigList":
+		structtype = deploy.DeploymentConfigList{}
+
+	case "DeploymentList":
+		structtype = k8sapis.DeploymentList{}
+
 	case "ReplicationControllerList":
 		structtype = k8sv1.ReplicationControllerList{}
+
+	case "PodList":
+		structtype = k8sv1.PodList{}
+
+	case "Pod":
+		structtype = k8sv1.Pod{}
+
+	case "ServiceList":
+		structtype = k8sv1.ServiceList{}
+
+	case "Service":
+		structtype = k8sv1.Service{}
+
+	case "EndpointsList":
+		structtype = k8sv1.EndpointsList{}
+
+	case "RouteList":
+		structtype = route.RouteList{}
+
+	case "Route":
+		structtype = route.Route{}
+
 	case "SecretList":
 		structtype = k8sv1.SecretList{}
+
+	case "Secret":
+		structtype = k8sv1.Secret{}
+
 	case "EventList":
 		structtype = k8sv1.EventList{}
+
 	case "ConfigMapList":
 		structtype = k8sv1.ConfigMapList{}
+
+	case "ConfigMap":
+		structtype = k8sv1.ConfigMap{}
+
 	case "PersistentVolumeClaimList":
 		structtype = k8sv1.PersistentVolumeClaimList{}
 
+	case "PersistentVolumeClaim":
+		structtype = k8sv1.PersistentVolumeClaim{}
+
 	default:
 		fmt.Printf("%+v\n", kind)
-		structtype = "11"
+		structtype = "missmatch"
 
 	}
-	if structtype == "11" {
+	if structtype == "missmatch" {
 
 		return body
+
 	}
 	err := json.Unmarshal(body, &structtype)
 
@@ -107,12 +182,19 @@ func formatkind(kind string, body []byte) ([]byte) {
 }
 
 func rewriteBody(resp *http.Response) (err error) {
+	//fmt.Printf("%+v\n", resp.StatusCode)
+	if resp.StatusCode == 101 {
+		return nil
+	}
+
 	b, err := ioutil.ReadAll(resp.Body) //Read html
 
 	if err != nil {
 		return err
 	}
+
 	err = resp.Body.Close()
+
 	if err != nil {
 		return err
 	}
@@ -122,7 +204,9 @@ func rewriteBody(resp *http.Response) (err error) {
 	err = json.Unmarshal(b, &kinds)
 
 	if err != nil {
+
 		return err
+
 	}
 
 	b = formatkind(kinds.Kind, b)
